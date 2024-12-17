@@ -19,6 +19,11 @@ sp_oauth = SpotifyOAuth(client_id=os.getenv('CLIENT_ID'),
                          redirect_uri=os.getenv('REDIRECT_URI'),
                          scope=SCOPE)
 
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204  # Empty response with no content (status code 204)
+
+
 @app.route('/login')
 def login():
     # Redirect the user to Spotify for authentication
