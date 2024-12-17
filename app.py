@@ -6,7 +6,7 @@ from spotipy.oauth2 import SpotifyOAuth
 
 # Set up your Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://wildanazz.github.io"}})  # Allow cross-origin requests
+CORS(app)  # Allow cross-origin requests
 app.secret_key = os.urandom(24)  # Secret key for session
 app.config['SESSION_COOKIE_NAME'] = 'my_flask_app_session'
 
