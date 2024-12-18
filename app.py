@@ -28,7 +28,7 @@ def login():
 @app.route('/callback')
 def callback():
     # Spotify redirects back to this URL with the authorization code
-    token_info = sp_oauth.get_access_token(request.args['code'])
+    token_info = sp_oauth.get_access_token(request.args['code'], as_dict=True, check_cache=False)
     session['token_info'] = token_info
     
     # After getting the token, redirect to the frontend and pass the token in the query string
