@@ -17,26 +17,20 @@ SCOPE = 'user-top-read user-library-read'
 sp_oauth = SpotifyOAuth(client_id=os.getenv('CLIENT_ID'),
                          client_secret=os.getenv('CLIENT_SECRET'),
                          redirect_uri=os.getenv('REDIRECT_URI'),
-                         scope=SCOPE)
-
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204  # Empty response with no content (status code 204)
-
+                         scope=SCOPE,
+                         cache_path=None)
 
 @app.route('/login')
 def login():
     # Redirect the user to Spotify for authentication
-    session.clear()
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
 
 @app.route('/callback')
 def callback():
     # Spotify redirects back to this URL with the authorization code
-    token_info = sp_oauth.get_access_token(request.args['code'])
+    token_info = sp_oauth.get_access_token(request.args['code'], as_dict=True, check_cache=False)
     session['token_info'] = token_info
-    print('token_info', token_info)
     
     # After getting the token, redirect to the frontend and pass the token in the query string
     return redirect(url_for('send_top_genres'))
@@ -54,26 +48,29 @@ def send_top_genres():
     # Get the user's top artists (50 at a time)
     top_artists_res1 = sp.current_user_top_artists(limit=50, offset=0, time_range="medium_term")
     top_artists_res2 = sp.current_user_top_artists(limit=50, offset=50, time_range="medium_term")
-    top_artists = top_artists_res1['items'] + top_artists_res2['items']
     
-    # Extract genres from top artists
-    genres = set()
-    for artist in top_artists:
-        genres.update(artist['genres'])
+    # Combine the results of the two API calls
+    top_artists = top_artists_res1['items']
+    if len(top_artists_res2['items']) > 0:
+        top_artists += top_artists_res2['items']
     
-    # Prepare the genres list as a comma-separated string
-    genres_list = ",".join(genres)
-
-    print(genres_list)
+    # Check if there are any top artists
+    if not top_artists:
+        # Handle case where the user doesn't have top artists (new user)
+        genres_list = ""
+    else:
+        # Extract genres from top artists
+        genres = set()
+        for artist in top_artists:
+            genres.update(artist['genres'])
+        
+        # Prepare the genres list as a comma-separated string
+        genres_list = ",".join(genres)
     
-    # Create a response and disable cache
-    response = redirect(f"https://wildanazz.github.io/d3-spotify-genres/?genres={genres_list}")
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
+    session.pop('token_info', None)
     
-    return response
-
+    # Redirect to the frontend with genres data in the URL (query params)
+    return redirect(f"https://wildanazz.github.io/d3-spotify-genres/?genres={genres_list}")
 
 if __name__ == '__main__':
     app.run(debug=True)
