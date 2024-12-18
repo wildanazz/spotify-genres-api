@@ -27,6 +27,7 @@ def favicon():
 @app.route('/login')
 def login():
     # Redirect the user to Spotify for authentication
+    session.clear()
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
 
@@ -35,6 +36,7 @@ def callback():
     # Spotify redirects back to this URL with the authorization code
     token_info = sp_oauth.get_access_token(request.args['code'])
     session['token_info'] = token_info
+    print('token_info', token_info)
     
     # After getting the token, redirect to the frontend and pass the token in the query string
     return redirect(url_for('send_top_genres'))
@@ -64,8 +66,14 @@ def send_top_genres():
 
     print(genres_list)
     
-    # Redirect to the frontend with genres data in the URL (query params)
-    return redirect(f"https://wildanazz.github.io/d3-spotify-genres/?genres={genres_list}")
+    # Create a response and disable cache
+    response = redirect(f"https://wildanazz.github.io/d3-spotify-genres/?genres={genres_list}")
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    return response
+
 
 if __name__ == '__main__':
     app.run(debug=True)
