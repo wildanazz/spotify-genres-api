@@ -17,8 +17,7 @@ SCOPE = 'user-top-read user-library-read'
 sp_oauth = SpotifyOAuth(client_id=os.getenv('CLIENT_ID'),
                          client_secret=os.getenv('CLIENT_SECRET'),
                          redirect_uri=os.getenv('REDIRECT_URI'),
-                         scope=SCOPE,
-                         cache_path=None)
+                         scope=SCOPE)
 
 @app.route('/login')
 def login():
@@ -29,7 +28,7 @@ def login():
 @app.route('/callback')
 def callback():
     # Spotify redirects back to this URL with the authorization code
-    token_info = sp_oauth.get_access_token(request.args['code'], as_dict=True, check_cache=False)
+    token_info = sp_oauth.get_access_token(request.args['code'])
     session['token_info'] = token_info
     
     # After getting the token, redirect to the frontend and pass the token in the query string
