@@ -56,14 +56,24 @@ def send_top_genres():
     # Check if there are any top artists
     if not top_artists:
         # Handle case where the user doesn't have top artists (new user)
-        genres_list = ""
+        # Fetch the most recent tracks instead
+        recent_tracks_res = sp.current_user_recently_played(limit=10)
+        if recent_tracks_res['items']:
+            # Extract genres from the recent tracks' artists
+            genres = set()
+            for track in recent_tracks_res['items']:
+                for artist in track['track']['artists']:
+                    genres.update(artist['genres'])
+            
+            genres_list = ",".join(genres)
+        else:
+            genres_list = ""
     else:
         # Extract genres from top artists
         genres = set()
         for artist in top_artists:
             genres.update(artist['genres'])
         
-        # Prepare the genres list as a comma-separated string
         genres_list = ",".join(genres)
     
     session.pop('token_info', None)
