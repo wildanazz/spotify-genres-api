@@ -63,6 +63,8 @@ def send_top_genres():
     genres_list = ",".join(genres)
 
     print(genres_list)
+
+    session.clear()
     
     # Redirect to the frontend with genres data in the URL (query params)
     return redirect(f"https://wildanazz.github.io/d3-spotify-genres/?genres={genres_list}")
